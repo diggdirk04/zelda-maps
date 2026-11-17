@@ -46,6 +46,9 @@ jobs:
           echo "code=$((MA*10000 + MI*100 + PA))" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
+      - name: Build the page from source
+        # Rebuild site/index.html so releases always match the source, even if someone forgot to run build.py
+        run: python3 build.py
       - name: Build the offline web package
         run: python3 build_app.py
       - name: Zip it

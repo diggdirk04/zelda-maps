@@ -1,0 +1,7 @@
+# Build outputs and extracted data: collapsed in diffs and left out of GitHub's language stats.
+# Edit the sources (gamepage.js, gamepage.css, theme.css, build.py, ...) and run `python3 build.py` instead.
+site/index.html linguist-generated=true
+xldata.js linguist-generated=true
+dungeons.js linguist-generated=true
+totkdata.js linguist-generated=true
+docs/** linguist-documentation=true

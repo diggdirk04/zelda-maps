@@ -1,0 +1,23 @@
+# On every push and pull request: rebuild the page and make sure the committed site/index.html matches the source.
+name: Check build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Rebuild
+        run: python3 build.py
+      - name: Committed page is up to date
+        run: |
+          if ! git diff --quiet -- site/index.html; then
+            echo "::error file=site/index.html::site/index.html is out of date. Run 'python3 build.py' and commit the result."
+            exit 1
+          fi
