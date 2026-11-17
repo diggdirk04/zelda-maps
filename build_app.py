@@ -1,5 +1,7 @@
 import os,shutil,hashlib,json,re
 SITE='site'; APP='dist/zelda-maps-app'; WEB=APP+'/web'
+# app/ holds the offline package skeleton (desktop wrapper, run scripts, PWA files); the maps and page come from site/
+shutil.copytree('app',APP,dirs_exist_ok=True)
 for d in ['maps','icons']:
     if os.path.exists(WEB+'/'+d): shutil.rmtree(WEB+'/'+d)
     shutil.copytree(SITE+'/'+d,WEB+'/'+d,ignore=shutil.ignore_patterns('_*pack.webp'))

@@ -32,3 +32,4 @@ __pycache__/
 /.wget-hsts
 /zelda-maps.bundle
 /zelda-maps/
+!/.github/

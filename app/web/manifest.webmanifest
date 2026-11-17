@@ -1,0 +1,28 @@
+{
+ "name": "Hyrule Across the Ages: Zelda Map Comparison",
+ "short_name": "Zelda Maps",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#14130f",
+ "theme_color": "#14130f",
+ "description": "Compare the overworld maps of every mainline Legend of Zelda game.",
+ "icons": [
+  {
+   "src": "appicons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "appicons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "appicons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

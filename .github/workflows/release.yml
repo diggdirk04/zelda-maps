@@ -1,0 +1,175 @@
+# Builds every download and publishes a GitHub release when a version tag (v1.16, v2.0.1, ...) is pushed.
+# It can also be started by hand from the Actions tab ("Run workflow") with a version number.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, e.g. 1.16 (a v1.16 tag is created on the current commit)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The APK must keep the same signing key so new versions install over old ones.
+  APK_CERT_SHA256: '1E:08:A9:03:AE:F9:C3:A7:21:51:0B:64:EC:76:4D:01:D3:D0:94:EB:95:41:61:B6:25:44:EA:8F:18:7B:59:53'
+
+jobs:
+  web:
+    name: Web app (offline package)
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      semver: ${{ steps.v.outputs.semver }}
+      code: ${{ steps.v.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Work out the version
+        shell: bash
+        run: |
+          V="${{ github.event.inputs.version }}"
+          [ -z "$V" ] && V="${GITHUB_REF_NAME#v}"
+          V="${V#v}"
+          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then echo "Version '$V' must look like 1.16 or 1.16.2"; exit 1; fi
+          IFS=. read -r MA MI PA <<< "$V"; PA=${PA:-0}
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "semver=$MA.$MI.$PA" >> "$GITHUB_OUTPUT"
+          echo "code=$((MA*10000 + MI*100 + PA))" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Build the offline web package
+        run: python3 build_app.py
+      - name: Zip it
+        run: |
+          cd dist
+          zip -qr "../Zelda-Maps-${{ steps.v.outputs.version }}-offline.zip" zelda-maps-app
+      - uses: actions/upload-artifact@v4
+        with: { name: webapp, path: dist/zelda-maps-app, retention-days: 3 }
+      - uses: actions/upload-artifact@v4
+        with: { name: out-offline, path: 'Zelda-Maps-*-offline.zip', retention-days: 3 }
+
+  android:
+    name: Android APK
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: webapp, path: dist/zelda-maps-app }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - name: Get apktool and uber-apk-signer
+        run: |
+          curl -fsSL -o apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar
+          curl -fsSL -o signer.jar https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar
+      - name: Build the APK
+        run: |
+          sed -i "s/versionCode: '[0-9]*'/versionCode: '${{ needs.web.outputs.code }}'/; s/versionName: '[^']*'/versionName: '${{ needs.web.outputs.version }}'/" build/apk/apktool.yml
+          grep -A2 versionInfo build/apk/apktool.yml
+          mkdir -p build/apk/assets/web
+          cp -r dist/zelda-maps-app/web/{index.html,manifest.webmanifest,appicons,icons,maps} build/apk/assets/web/
+          java -jar apktool.jar b build/apk -o unsigned.apk
+          java -jar signer.jar -a unsigned.apk -o signed
+          cp signed/*-aligned-debugSigned.apk "Zelda-Maps-${{ needs.web.outputs.version }}-android.apk"
+      - name: Check the signing key is unchanged
+        run: |
+          got=$(unzip -p Zelda-Maps-*-android.apk 'META-INF/*.RSA' | openssl pkcs7 -inform DER -print_certs | openssl x509 -noout -fingerprint -sha256 | cut -d= -f2)
+          echo "certificate: $got"
+          [ "$got" = "$APK_CERT_SHA256" ] || { echo "Signing key changed: phones would refuse to update. Stopping."; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with: { name: out-android, path: 'Zelda-Maps-*-android.apk', retention-days: 3 }
+
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    needs: web
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Windows, os: windows-latest, args: --win }
+          - { name: macOS, os: macos-latest, args: --mac }
+          - { name: Linux, os: ubuntu-latest, args: --linux }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: webapp, path: dist/zelda-maps-app }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Build
+        shell: bash
+        working-directory: dist/zelda-maps-app/desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install --no-audit --no-fund
+          npm version "${{ needs.web.outputs.semver }}" --no-git-tag-version --allow-same-version
+          npx electron-builder ${{ matrix.args }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: out-${{ matrix.name }}
+          retention-days: 3
+          path: |
+            dist/zelda-maps-app/desktop/release/*.exe
+            dist/zelda-maps-app/desktop/release/*.dmg
+            dist/zelda-maps-app/desktop/release/*.zip
+            dist/zelda-maps-app/desktop/release/*.AppImage
+            dist/zelda-maps-app/desktop/release/*.deb
+
+  release:
+    name: Publish the release
+    needs: [web, android, desktop]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'out-*', path: out, merge-multiple: true }
+      - name: Checksums
+        run: |
+          cd out
+          ls -la
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Release notes
+        run: |
+          V="${{ needs.web.outputs.version }}"
+          {
+            [ -f "release-notes/v$V.md" ] && { cat "release-notes/v$V.md"; echo; }
+            cat <<'EOF'
+          ## Downloads
+
+          | Platform | File |
+          |---|---|
+          | Android | `Zelda-Maps-VER-android.apk`: open it on the phone and allow installing from your browser or file manager. Updates install over the old version and keep your progress. |
+          | Windows | `…-windows-setup-x64.exe` (installer), `…-windows-portable-x64.exe` (no install), `…-windows-setup-arm64.exe` (ARM PCs) |
+          | macOS | `…-macos-arm64.dmg` (Apple silicon), `…-macos-x64.dmg` (Intel) |
+          | Linux | `…-linux-x86_64.AppImage` or `zelda-maps_VER_amd64.deb`; ARM64 builds too |
+          | Any browser | `…-offline.zip`: unzip and open `web/index.html`, or use the run script for your system |
+
+          The apps aren't code-signed, so the first launch shows a warning: on Windows choose **More info → Run anyway**; on macOS right-click the app and choose **Open** (or allow it under System Settings → Privacy & Security).
+          On Linux, make the AppImage executable (`chmod +x`) and run it.
+
+          `SHA256SUMS.txt` lists checksums for every file.
+          EOF
+          } | sed "s/VER/$V/g" > notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${{ needs.web.outputs.version }}"
+          if gh release view "v$V" >/dev/null 2>&1; then
+            gh release upload "v$V" out/* --clobber
+            gh release edit "v$V" --notes-file notes.md
+          else
+            gh release create "v$V" out/* --title "Zelda Maps $V" --notes-file notes.md --target "${{ github.sha }}"
+          fi

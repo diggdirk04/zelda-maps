@@ -14,10 +14,23 @@ Interactive maps for every mainline Zelda game: overworlds, dungeons, item and p
 | `build_xa.py` | Cross-game blend images (`site/maps/xa_*.webp`). |
 | `hd/` | Deep-zoom tiles: `make_hd.py` (overworlds), `make_xa_hd.py` (blends), `embed.py` (writes the tile table into `gamepage.js`). |
 | `pack_dg.py` | Bundles tiles into `_*pack.webp` files for hosts with a file-count limit (generated, not committed). |
-| `build_app.py` → `dist/zelda-maps-app/web` | Offline app web root (used by the APK and AppImage). |
+| `app/` | Offline package skeleton: desktop (Electron) wrapper, run scripts, PWA manifest and service worker. |
+| `build_app.py` → `dist/zelda-maps-app` | Offline package (web root used by every app). |
 | `build/apk/` | Android app (apktool project: manifest, smali, resources). Web content is copied into `assets/web/` at build time. |
 | `build/AppDir/` | Linux AppImage skeleton (Electron launcher: `AppRun`, `resources/app/main.js`). |
 | `*test.py` | Playwright checks (desktop, Android WebView emulation, deep zoom, blends). |
+
+## Releases
+
+Pushing a version tag (`git tag v1.16 && git push origin v1.16`) runs `.github/workflows/release.yml`, which builds and publishes:
+
+- Android APK (same signing key every time, so updates install over the old version)
+- Windows installer (x64, ARM64) and portable .exe
+- macOS .dmg and .zip (Apple silicon and Intel)
+- Linux AppImage and .deb (x86_64, ARM64)
+- Offline web package (.zip) and `SHA256SUMS.txt`
+
+Optional notes for a version go in `release-notes/v<version>.md`. The workflow can also be started from the Actions tab.
 
 ## Building
 

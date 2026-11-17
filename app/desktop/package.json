@@ -1,0 +1,114 @@
+{
+  "name": "zelda-maps",
+  "productName": "Zelda Maps",
+  "version": "1.0.0",
+  "description": "Hyrule Across the Ages: compare the overworld maps of every mainline Zelda game.",
+  "main": "main.js",
+  "author": {
+    "name": "diggdirk04"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.personal.zeldamaps",
+    "productName": "Zelda Maps",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web",
+        "to": "web"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "../web/appicons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Zelda-Maps-${version}-windows-setup-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "../web/appicons/icon-512.png",
+      "category": "Game",
+      "maintainer": "diggdirk04 <diggdirk04@users.noreply.github.com>",
+      "synopsis": "Interactive maps for every Zelda game"
+    },
+    "artifactName": "Zelda-Maps-${version}-${os}-${arch}.${ext}",
+    "portable": {
+      "artifactName": "Zelda-Maps-${version}-windows-portable-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "../web/appicons/icon-512.png",
+      "category": "public.app-category.games",
+      "identity": "-"
+    },
+    "dmg": {
+      "artifactName": "Zelda-Maps-${version}-macos-${arch}.${ext}"
+    },
+    "deb": {
+      "artifactName": "zelda-maps_${version}_${arch}.${ext}"
+    }
+  },
+  "homepage": "https://github.com/diggdirk04/zelda-maps"
+}
