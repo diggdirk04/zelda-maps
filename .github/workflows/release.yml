@@ -96,9 +96,10 @@ jobs:
       matrix:
         include:
           - { name: Windows, os: windows-latest, args: --win }
-          - { name: macOS, os: macos-latest, args: --mac }
+          - { name: macOS, os: macos-14, args: --mac }
           - { name: Linux, os: ubuntu-latest, args: --linux }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -129,6 +130,8 @@ jobs:
   release:
     name: Publish the release
     needs: [web, android, desktop]
+    # Publish whatever built: a platform whose build machine was unavailable is left out, not the whole release.
+    if: ${{ !cancelled() && needs.web.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +155,7 @@ jobs:
           |---|---|
           | Android | `Zelda-Maps-VER-android.apk`: open it on the phone and allow installing from your browser or file manager. Updates install over the old version and keep your progress. |
           | Windows | `…-windows-setup-x64.exe` (installer), `…-windows-portable-x64.exe` (no install), `…-windows-setup-arm64.exe` (ARM PCs) |
-          | macOS | `…-macos-arm64.dmg` (Apple silicon), `…-macos-x64.dmg` (Intel) |
+          MACROW
           | Linux | `…-linux-x86_64.AppImage` or `zelda-maps_VER_amd64.deb`; ARM64 builds too |
           | Any browser | `…-offline.zip`: unzip and open `web/index.html`, or use the run script for your system |
 
@@ -162,6 +165,10 @@ jobs:
           `SHA256SUMS.txt` lists checksums for every file.
           EOF
           } | sed "s/VER/$V/g" > notes.md
+          if ls out/*.dmg >/dev/null 2>&1; then MAC='| macOS | `…-macos-arm64.dmg` (Apple silicon), `…-macos-x64.dmg` (Intel) |'
+          else MAC='| macOS | Not in this release: GitHub had no Mac build machine available. Use the offline zip in Safari or Chrome. |'; fi
+          awk -v r="$MAC" '{ if ($0 ~ /^MACROW$/) print r; else print }' notes.md > n && mv n notes.md
+          cat notes.md
       - name: Publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
