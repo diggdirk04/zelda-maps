@@ -51,7 +51,7 @@ jobs:
       - name: Zip it
         run: |
           cd dist
-          zip -qr "../Zelda-Maps-${{ steps.v.outputs.version }}-offline.zip" zelda-maps-app
+          zip -qr "../Zelda-Maps-${{ steps.v.outputs.semver }}-offline.zip" zelda-maps-app
       - uses: actions/upload-artifact@v4
         with: { name: webapp, path: dist/zelda-maps-app, retention-days: 3 }
       - uses: actions/upload-artifact@v4
@@ -79,7 +79,7 @@ jobs:
           cp -r dist/zelda-maps-app/web/{index.html,manifest.webmanifest,appicons,icons,maps} build/apk/assets/web/
           java -jar apktool.jar b build/apk -o unsigned.apk
           java -jar signer.jar -a unsigned.apk -o signed
-          cp signed/*-aligned-debugSigned.apk "Zelda-Maps-${{ needs.web.outputs.version }}-android.apk"
+          cp signed/*-aligned-debugSigned.apk "Zelda-Maps-${{ needs.web.outputs.semver }}-android.apk"
       - name: Check the signing key is unchanged
         run: |
           got=$(unzip -p Zelda-Maps-*-android.apk 'META-INF/*.RSA' | openssl pkcs7 -inform DER -print_certs | openssl x509 -noout -fingerprint -sha256 | cut -d= -f2)
@@ -96,7 +96,7 @@ jobs:
       matrix:
         include:
           - { name: Windows, os: windows-latest, args: --win }
-          - { name: macOS, os: macos-14, args: --mac }
+          - { name: macOS, os: macos-13, args: --mac }
           - { name: Linux, os: ubuntu-latest, args: --linux }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -140,6 +140,8 @@ jobs:
       - name: Checksums
         run: |
           cd out
+          # electron-builder also makes a combined x64+ARM installer; the per-architecture ones are enough
+          rm -f *-windows-setup.exe
           ls -la
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
@@ -164,7 +166,7 @@ jobs:
 
           `SHA256SUMS.txt` lists checksums for every file.
           EOF
-          } | sed "s/VER/$V/g" > notes.md
+          } | sed "s/VER/${{ needs.web.outputs.semver }}/g" > notes.md
           if ls out/*.dmg >/dev/null 2>&1; then MAC='| macOS | `…-macos-arm64.dmg` (Apple silicon), `…-macos-x64.dmg` (Intel) |'
           else MAC='| macOS | Not in this release: GitHub had no Mac build machine available. Use the offline zip in Safari or Chrome. |'; fi
           awk -v r="$MAC" '{ if ($0 ~ /^MACROW$/) print r; else print }' notes.md > n && mv n notes.md
@@ -175,6 +177,8 @@ jobs:
         run: |
           V="${{ needs.web.outputs.version }}"
           if gh release view "v$V" >/dev/null 2>&1; then
+            # rebuilding a version replaces all of its files
+            gh release view "v$V" --json assets -q '.assets[].name' | while read -r a; do gh release delete-asset "v$V" "$a" -y; done
             gh release upload "v$V" out/* --clobber
             gh release edit "v$V" --notes-file notes.md
           else
