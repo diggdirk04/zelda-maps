@@ -108,7 +108,12 @@
     },
     "deb": {
       "artifactName": "zelda-maps_${version}_${arch}.${ext}"
-    }
+    },
+    "publish": null
   },
-  "homepage": "https://github.com/diggdirk04/zelda-maps"
+  "homepage": "https://github.com/diggdirk04/zelda-maps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diggdirk04/zelda-maps.git"
+  }
 }
