@@ -96,7 +96,6 @@ jobs:
       matrix:
         include:
           - { name: Windows, os: windows-latest, args: --win }
-          - { name: macOS, os: macos-13, args: --mac }
           - { name: Linux, os: ubuntu-latest, args: --linux }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -127,9 +126,61 @@ jobs:
             dist/zelda-maps-app/desktop/release/*.AppImage
             dist/zelda-maps-app/desktop/release/*.deb
 
+  macos:
+    name: macOS (built on Linux)
+    # GitHub's Mac build machines aren't available to this account, so the .app is assembled from
+    # Electron's official macOS build and ad-hoc signed with rcodesign.
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: webapp, path: dist/zelda-maps-app }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Get rcodesign
+        env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+        run: |
+          url=$(gh api repos/indygreg/apple-platform-rs/releases --paginate --jq '.[] | select(.tag_name|startswith("apple-codesign/")) | .assets[] | select(.name|endswith("x86_64-unknown-linux-musl.tar.gz")) | .browser_download_url' | head -1)
+          echo "rcodesign: $url"
+          curl -fsSL "$url" | tar xz
+          find . -name rcodesign -type f -exec install -m755 {} /usr/local/bin/rcodesign \;
+          rcodesign --version
+      - name: Assemble the apps
+        run: |
+          pip install --quiet pillow
+          EV=$(node -p "require('./dist/zelda-maps-app/desktop/package.json').devDependencies.electron.replace(/^[^0-9]*/,'')")
+          V="${{ needs.web.outputs.semver }}"
+          python3 - <<'PY'
+          from PIL import Image
+          Image.open('dist/zelda-maps-app/web/appicons/icon-512.png').save('zm.icns')
+          PY
+          for arch in arm64 x64; do
+            d="mac-$arch"; mkdir -p "$d"
+            curl -fsSL -o e.zip "https://github.com/electron/electron/releases/download/v$EV/electron-v$EV-darwin-$arch.zip"
+            unzip -q e.zip -d "$d"; rm e.zip
+            mv "$d/Electron.app" "$d/Zelda Maps.app"; R="$d/Zelda Maps.app/Contents/Resources"
+            rm -f "$R/default_app.asar"; mkdir -p "$R/app"
+            cp dist/zelda-maps-app/desktop/main.js "$R/app/"
+            node -e "const p=require('./dist/zelda-maps-app/desktop/package.json');require('fs').writeFileSync(process.argv[1],JSON.stringify({name:p.name,productName:p.productName,version:process.argv[2],main:'main.js'},null,1))" "$R/app/package.json" "$V"
+            cp -r dist/zelda-maps-app/web "$R/web"
+            cp zm.icns "$R/electron.icns"
+            python3 - "$d/Zelda Maps.app/Contents/Info.plist" "$V" <<'PY'
+          import plistlib,sys
+          p,v=sys.argv[1],sys.argv[2];d=plistlib.load(open(p,'rb'))
+          d.update(CFBundleName='Zelda Maps',CFBundleDisplayName='Zelda Maps',CFBundleIdentifier='com.personal.zeldamaps',CFBundleShortVersionString=v,CFBundleVersion=v,LSApplicationCategoryType='public.app-category.games')
+          plistlib.dump(d,open(p,'wb'))
+          PY
+            rcodesign sign "$d/Zelda Maps.app" || echo "::warning::ad-hoc signing failed for $arch"
+            (cd "$d" && zip -qry "../Zelda-Maps-$V-macos-$arch.zip" "Zelda Maps.app")
+          done
+          ls -la *.zip
+      - uses: actions/upload-artifact@v4
+        with: { name: out-macOS, path: 'Zelda-Maps-*-macos-*.zip', retention-days: 3 }
+
   release:
     name: Publish the release
-    needs: [web, android, desktop]
+    needs: [web, android, desktop, macos]
     # Publish whatever built: a platform whose build machine was unavailable is left out, not the whole release.
     if: ${{ !cancelled() && needs.web.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-latest
@@ -167,7 +218,7 @@ jobs:
           `SHA256SUMS.txt` lists checksums for every file.
           EOF
           } | sed "s/VER/${{ needs.web.outputs.semver }}/g" > notes.md
-          if ls out/*.dmg >/dev/null 2>&1; then MAC='| macOS | `…-macos-arm64.dmg` (Apple silicon), `…-macos-x64.dmg` (Intel) |'
+          if ls out/*-macos-*.zip >/dev/null 2>&1; then MAC='| macOS | `…-macos-arm64.zip` (Apple silicon) or `…-macos-x64.zip` (Intel): unzip and drag **Zelda Maps** to Applications. If macOS says the app is damaged, run `xattr -cr "/Applications/Zelda Maps.app"` in Terminal once. |'
           else MAC='| macOS | Not in this release: GitHub had no Mac build machine available. Use the offline zip in Safari or Chrome. |'; fi
           awk -v r="$MAC" '{ if ($0 ~ /^MACROW$/) print r; else print }' notes.md > n && mv n notes.md
           cat notes.md
