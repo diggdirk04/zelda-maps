@@ -4,6 +4,18 @@
 
 Interactive maps for every mainline Zelda game: overworlds, dungeons, item and place-name layers, progress tracking, cross-game blends (ALttP / ALBW / EoW), deep zoom, dual-screen support and gamepad controls. It runs as a single web page and as apps for Android, Windows, macOS and Linux.
 
+## Screenshots
+
+![A Link to the Past with A Link Between Worlds blended in at 50%](docs/screenshots/blend.jpg)
+*Cross-game blend: ALttP's Hyrule with ALBW blended in at 50%.*
+
+![Tears of the Kingdom surface, zoomed in with place names](docs/screenshots/totk.jpg)
+*Deep zoom on Tears of the Kingdom, with place names and Skyview Towers.*
+
+| Dual screen (AYN Thor): TotK | Dual screen: blend with labels flipped to ALBW |
+|---|---|
+| ![Dual-screen mode on the AYN Thor: TotK map on top, controls below](docs/screenshots/dual-screen-totk.jpg) | ![Dual-screen mode: ALttP and ALBW blend on top, blend controls below](docs/screenshots/dual-screen-blend.jpg) |
+
 ## Layout
 
 | Path | What it is |
