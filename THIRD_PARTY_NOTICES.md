@@ -40,7 +40,8 @@ Other map images (guide scans, fan-made and community maps) were supplied by the
 
 ## Fonts
 
-The fonts in `fonts/` are used under their own licenses.
+- Inter (`inter-*.woff`): SIL Open Font License 1.1
+- TeX Gyre Bonum (`bonum-*.woff`): GUST Font License
 
 ## GPL and AGPL material
 
