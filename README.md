@@ -31,7 +31,6 @@ Interactive maps for every mainline Zelda game: overworlds, dungeons, item and p
 | `app/` | Offline package skeleton: desktop (Electron) wrapper, run scripts, PWA manifest and service worker. |
 | `build_app.py` → `dist/zelda-maps-app` | Offline package (web root used by every app). |
 | `build/apk/` | Android app (apktool project: manifest, smali, resources). Web content is copied into `assets/web/` at build time. |
-| `build/AppDir/` | Linux AppImage skeleton (Electron launcher: `AppRun`, `resources/app/main.js`). |
 | `*test.py` | Playwright checks (desktop, Android WebView emulation, deep zoom, blends). |
 
 ## Releases
@@ -61,12 +60,11 @@ cp -r dist/zelda-maps-app/web/{index.html,manifest.webmanifest,appicons,icons,ma
 java -jar apktool.jar b build/apk -o zelda-maps-unsigned.apk
 java -jar uber-apk-signer.jar -a zelda-maps-unsigned.apk -o signed
 
-# Linux AppImage (needs Electron unpacked into build/AppDir/usr/lib/zelda-maps/)
-cp -r dist/zelda-maps-app/web build/AppDir/usr/lib/zelda-maps/resources/web
-ARCH=x86_64 appimagetool build/AppDir Zelda_Maps-x86_64.AppImage
+# Desktop (Windows, macOS, Linux) via electron-builder
+cd dist/zelda-maps-app/desktop && npm install && npx electron-builder --linux   # or --win / --mac
 ```
 
-The APK and AppImage are over GitHub's 100 MB file limit, so they belong on the Releases page, not in the repository.
+The app files are over GitHub's 100 MB file limit, so they go on the Releases page (the release workflow does this), not in the repository.
 
 ## License
 

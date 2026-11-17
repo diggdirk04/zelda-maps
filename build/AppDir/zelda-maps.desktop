@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Zelda Maps
-Comment=Compare the overworld and dungeon maps of every mainline Zelda game
-Exec=AppRun
-Icon=zelda-maps
-Categories=Game;
-Terminal=false

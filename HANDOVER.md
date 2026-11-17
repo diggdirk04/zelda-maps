@@ -29,6 +29,12 @@ Every APK so far is signed with the public debug key that ships inside uber-apk-
 - Change the package name in `build/apk/AndroidManifest.xml` (and the smali paths) so your app installs alongside this one instead of on top of it.
 - Tell users they'll need to reinstall once.
 
+## Things to know before you start
+
+- **Committed build output:** the deep-zoom tiles in `site/maps/dg/` and the extracted data (`xldata.js`, `dungeons.js`, `totkdata.js`) are committed. The scripts that regenerate them (`hd/*.py`, `extract_*.py`) need the original source images and tracker packs. Those aren't in the repository, and the scripts still contain the original machine's paths (`/home/claude/...`, `/mnt/user-data/uploads/...`). To regenerate, fetch the sources listed in `THIRD_PARTY_NOTICES.md` and point the scripts at them.
+- **One-off scripts:** many root-level `*test.py`, `shot*.py` and `add*.py` files were one-off development scripts. The ones worth keeping are `androidtest.py`, `hdtest.py`, `blendtest.py` and `bugtest.py`.
+- **Progress sync:** `gpsync.js` only works when the page is hosted as a claude.ai artifact. Everywhere else it stays off, and progress moves between devices with Export and Import. A successor could swap in their own backend or remove it.
+
 ## Where things live
 
 - **Viewer:** `gamepage.js`, `gamepage.css` and `theme.css`, plus `gpdual.js` (dual screen), `gpad.js` (gamepad), `gpsync.js` (progress sync) and `lbzoom.js` (home-page lightbox).

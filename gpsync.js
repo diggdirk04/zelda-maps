@@ -18,7 +18,7 @@ function syText(){if(SY.state==='on')return `<span class="dot on"></span>Synced 
  if(SY.state==='connecting')return '<span class="dot"></span>Connecting to sync…';
  if(SY.state==='full')return '<span class="dot off"></span>Sync storage is full. Use Export to keep a copy.';
  if(SY.state==='stale')return '<span class="dot off"></span>Sync can\'t be reached right now. Changes are saved here and will upload when it reconnects.';
- return '<span class="dot off"></span>Sync is available on the claude.ai page. In the offline apps, use Export and Import to move progress between devices.'}
+ return '<span class="dot off"></span>Use Export and Import to move progress between devices.'}
 function syApply(changed){if(!changed.size)return;const g=GP.g;
  if(g&&[...changed].some(k=>k==='done:'+g.id||k==='pref:'+g.id||k.startsWith('notes:'+g.id+':'))&&document.body.classList.contains('gp-on')){const id=g.id,mode=GP.mode,idx=mode==='d'?GP.dm:GP.tab;GP.g=null;gpOpen(id,mode,idx)}
  GP.navDraw&&GP.navDraw()}

@@ -6,7 +6,7 @@ def run(add):
     # Zelda II labelled world map (user-supplied), tab z2w
     import sys; sys.path.insert(0,'z2'); from z2world import CATS
     for n,kind,its in CATS:
-        add('aol','Zelda II · world map',n,'z2w',[D(round(x/900*100,2),round(y/574*100,2),'z2w',nm,dt) for x,y,nm,dt in its],None,kind='dot',src='Hand-placed from the labelled world map you supplied')
+        add('aol','Zelda II · world map',n,'z2w',[D(round(x/900*100,2),round(y/574*100,2),'z2w',nm,dt) for x,y,nm,dt in its],None,kind='dot',src='Hand-placed from a labelled world map')
     t='aol'; G='Zelda II'
     add('aol',G,'Towns',t,[D(5.2,12.2,t,'Ruto','Town · teaches Jump (per map label)'),D(27.8,25,t,'Rauru','Town (approx.)'),D(9.7,53.9,t,'Saria','Town'),D(37.3,40.5,t,'Mido','Town · Downward Thrust (per map label)'),D(47.9,28.2,t,'Darunia','Town · Upward Thrust'),D(57.9,48.4,t,'Nabooru','Town'),D(63.6,77.8,t,'Kasuto','Town (approx.)')],None,kind='dot',src=SRC)
     add('aol',G,'Dungeons (palaces)',t,[D(15.9,23.7,t,'North Palace','Starting palace, sleeping Zelda'),D(36.1,8.5,t,'Parapa Palace (1)','approx.'),D(9.8,32.7,t,'Midoro Palace (2)','per map label'),D(33.5,58.3,t,'Island Palace (3)','per map label'),D(93.4,26.5,t,'Maze Island Palace (4)'),D(78.1,48.4,t,'Palace on the Sea (5)','per map label'),D(70,79,t,'Three-Eye Rock Palace (6)','hidden under the rock'),D(48.3,58.2,t,'Great Palace (7)','per map label')],None,kind='dot',src=SRC)
