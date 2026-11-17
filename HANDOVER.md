@@ -39,6 +39,6 @@ Every APK so far is signed with the public debug key that ships inside uber-apk-
   - Android: `build/apk/` (apktool project).
   - Desktop: `app/desktop/` (Electron).
   - Offline package and PWA files: `app/`.
-- **Tests:** `*test.py` (Playwright). `androidtest.py` emulates the Thor, `hdtest.py` covers deep zoom, and `/tmp`-style scripts in the history cover blends.
+- **Tests:** `*test.py` (Playwright). `androidtest.py` emulates the Thor, `hdtest.py` covers deep zoom and `blendtest.py` covers blends.
 
 Thanks for picking it up.
