@@ -1,6 +1,8 @@
 # Zelda Maps
 
-Interactive maps for every mainline Zelda game: overworlds, dungeons, item and place-name layers, progress tracking, cross-game blends (ALttP / ALBW / EoW), deep zoom, dual-screen support and gamepad controls. It runs as a single web page, an Android app and a Linux AppImage.
+> **This project is no longer maintained.** The original author has stepped away and is handing it to the community. Fork it, rename it, ship your own releases and take it wherever you like; no permission is needed. If you start an active fork, open an issue here so others can find it. See [HANDOVER.md](HANDOVER.md) for where things stand and how to pick it up.
+
+Interactive maps for every mainline Zelda game: overworlds, dungeons, item and place-name layers, progress tracking, cross-game blends (ALttP / ALBW / EoW), deep zoom, dual-screen support and gamepad controls. It runs as a single web page and as apps for Android, Windows, macOS and Linux.
 
 ## Layout
 
