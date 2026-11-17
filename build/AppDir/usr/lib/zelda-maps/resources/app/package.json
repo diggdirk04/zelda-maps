@@ -1,0 +1,38 @@
+{
+  "name": "zelda-maps",
+  "productName": "Zelda Maps",
+  "version": "1.15.0",
+  "description": "Hyrule Across the Ages: compare the overworld maps of every mainline Zelda game.",
+  "main": "main.js",
+  "author": "Personal project",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "local.personal.zeldamaps",
+    "productName": "Zelda Maps",
+    "directories": { "output": "release" },
+    "files": ["main.js", "package.json"],
+    "extraResources": [{ "from": "../web", "to": "web" }],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "../web/appicons/icon.ico"
+    },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "../web/appicons/icon-512.png",
+      "category": "Game",
+      "maintainer": "personal@localhost"
+    }
+  }
+}

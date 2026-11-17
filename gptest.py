@@ -1,0 +1,40 @@
+import asyncio,time
+from playwright.async_api import async_playwright
+U='file:///home/claude/site/index.html'
+async def main():
+    async with async_playwright() as p:
+        b=await p.chromium.launch(executable_path='/usr/bin/google-chrome')
+        ctx=await b.new_context(viewport={'width':1400,'height':900})
+        pg=await ctx.new_page();errs=[]
+        pg.on('pageerror',lambda e:errs.append(str(e)))
+        await pg.goto(U);await pg.wait_for_timeout(600)
+        await pg.screenshot(path='shots/g_home.png')
+        await pg.click('.ages a[href="#/g/oot"]');await pg.wait_for_timeout(900)
+        await pg.screenshot(path='shots/g_oot_o.png')
+        await pg.keyboard.press('/');await pg.keyboard.type('forest temple');await pg.wait_for_timeout(300)
+        await pg.screenshot(path='shots/g_search.png')
+        await pg.keyboard.press('Enter');await pg.wait_for_timeout(900)
+        print('hash',await pg.evaluate('location.hash'))
+        await pg.click('.gpchk li[data-u] >> nth=2');await pg.wait_for_timeout(400)
+        await pg.keyboard.press(' ');await pg.wait_for_timeout(300)
+        await pg.screenshot(path='shots/g_oot_d.png')
+        d1=await pg.evaluate("GP.done.size")
+        await pg.reload();await pg.wait_for_timeout(900)
+        print('done after reload',d1,await pg.evaluate("GP.done.size"),await pg.evaluate('location.hash'))
+        t=time.time();await pg.evaluate("location.hash='#/g/botw/o/1'");await pg.wait_for_timeout(1500)
+        print('botw markers',await pg.evaluate("document.querySelectorAll('#gpv .gm,#gpv .gl').length"),round(time.time()-t,2))
+        await pg.mouse.move(700,450);
+        for i in range(4): await pg.mouse.wheel(0,-300);await pg.wait_for_timeout(100)
+        await pg.screenshot(path='shots/g_botw.png')
+        await pg.keyboard.press('Escape');await pg.wait_for_timeout(500)
+        print('home?',await pg.evaluate("!document.body.classList.contains('gp-on')"))
+        m=await b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
+        m.on('pageerror',lambda e:errs.append('M '+str(e)))
+        await m.goto(U+'#/g/tp/d/3');await m.wait_for_timeout(1200)
+        await m.screenshot(path='shots/g_mob.png',full_page=False)
+        print('mob docW',await m.evaluate('document.documentElement.scrollWidth'))
+        await m.goto(U);await m.wait_for_timeout(800)
+        print('mob home docW',await m.evaluate('document.documentElement.scrollWidth'))
+        print('errs',errs)
+        await b.close()
+asyncio.run(main())

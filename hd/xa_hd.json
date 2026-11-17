@@ -1,0 +1,98 @@
+{
+"xa_albw_on_alttp.webp": {
+"pre": "hdxaalbwonalttp",
+"base": 1500,
+"lv": {
+"2": [
+3536,
+3536,
+7,
+7
+]
+}
+},
+"xa_lorule_on_alttp.webp": {
+"pre": "hdxaloruleonalttp",
+"base": 1500,
+"lv": {
+"2": [
+3536,
+3536,
+7,
+7
+]
+}
+},
+"xa_eow_on_alttp.webp": {
+"pre": "hdxaeowonalttp",
+"base": 1500,
+"lv": {
+"2": [
+3536,
+3536,
+7,
+7
+]
+}
+},
+"xa_alttp_on_albw.webp": {
+"pre": "hdxaalttponalbw",
+"base": 1500,
+"lv": {
+"2": [
+3072,
+3072,
+6,
+6
+]
+}
+},
+"xa_dark_on_albw.webp": {
+"pre": "hdxadarkonalbw",
+"base": 1500,
+"lv": {
+"2": [
+3072,
+3072,
+6,
+6
+]
+}
+},
+"xa_eow_on_albw.webp": {
+"pre": "hdxaeowonalbw",
+"base": 1500,
+"lv": {
+"2": [
+3072,
+3072,
+6,
+6
+]
+}
+},
+"xa_alttp_on_eow.webp": {
+"pre": "hdxaalttponeow",
+"base": 1500,
+"lv": {
+"2": [
+3600,
+2441,
+8,
+5
+]
+}
+},
+"xa_albw_on_eow.webp": {
+"pre": "hdxaalbwoneow",
+"base": 1500,
+"lv": {
+"2": [
+3600,
+2441,
+8,
+5
+]
+}
+}
+}

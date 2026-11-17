@@ -1,0 +1,34 @@
+# third-party clones and uploads used as build inputs (not ours to redistribute wholesale)
+/ext/
+/ext2/
+/ext3/
+/attic/
+/shots/
+__pycache__/
+*.pyc
+*.bak
+*.premq
+# generated outputs
+/dist/
+/site/maps/dg/_*pack.webp
+/zelda_maps.html
+# build tooling and binaries (large); keep the Android and Linux app sources only
+/build/*
+!/build/apk/
+/build/apk/assets/web/
+/build/apk/build/
+!/build/AppDir/
+/build/AppDir/usr/lib/zelda-maps/*
+!/build/AppDir/usr/lib/zelda-maps/resources/
+/build/AppDir/usr/lib/zelda-maps/resources/*
+!/build/AppDir/usr/lib/zelda-maps/resources/app/
+# test scratch
+/have.txt
+/used.txt
+/bugs.json
+/.*/
+!/.gitignore
+/.gitconfig
+/.wget-hsts
+/zelda-maps.bundle
+/zelda-maps/
