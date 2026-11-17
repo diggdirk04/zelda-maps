@@ -38,6 +38,10 @@ ARCH=x86_64 appimagetool build/AppDir Zelda_Maps-x86_64.AppImage
 
 The APK and AppImage are over GitHub's 100 MB file limit, so they belong on the Releases page, not in the repository.
 
+## License
+
+The original code is MIT-licensed (see `LICENSE`). Nintendo's material and the third-party data and images listed in `THIRD_PARTY_NOTICES.md` are not covered by it and keep their own licenses.
+
 ## Credits
 
 The marker data and some map images come from open-source projects, each under its own license. They're credited in the app's footer and in the source of each extractor. They include Zelda Dungeon maps, objmap, MrCheeze's BotW map, the Archipelago and PopTracker packs (ALBW, ALttP, MM, OoT, OoS/OoA, PH, ST, TMC, TP, WW), Piranhaplant and the DarkZant TP map. The Legend of Zelda and its maps are © Nintendo. This is an unofficial fan project.
