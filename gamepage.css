@@ -141,7 +141,8 @@ body.gpad .gvret{display:block}body.gpad.zd-panel .gvret{display:none}
 .gvhd img{position:absolute;opacity:0;transition:opacity .2s ease-out;image-rendering:auto}
 .gvhdo{transition:opacity .1s}
 /* while a zoom gesture runs, let the GPU scale the cached map instead of re-drawing every tile each frame; it sharpens when the zoom stops */
-.gv.zooming .gvin{will-change:transform}
+.gv.zooming .gvin,.gv.moving .gvin{will-change:transform}
+.gv.heavy.settle .gvin{transition:none}
 .gvhd img.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.gvhd img{transition:none}}
 

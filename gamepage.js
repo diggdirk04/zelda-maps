@@ -32,8 +32,11 @@ function Viewer(host,opt){
  V.apply=function(){V.clamp();inn.style.transform=`translate(${V.ox+V.tx}px,${V.oy+V.ty}px) scale(${V.s})`;
   // Marker/label counter-scaling (--s) is costly on phones: while a zoom is in progress update it at most every 150 ms
   // and let the GPU scale the whole layer; settle it exactly once the zoom stops.
+  // any move: keep the map in one GPU layer until it settles, so panning doesn't repaint every marker
+  if(!V._mv){host.classList.add('moving');V._mv=1}clearTimeout(V._mt);V._mt=setTimeout(()=>{host.classList.remove('moving');V._mv=0},180);
   if(V.s!==V._cs){const now=performance.now();host.classList.add('zooming');
-   if(V._cs===undefined||now-(V._ct||0)>100){inn.style.setProperty('--s',V.s);V._cs=V.s;V._ct=now}
+   // with many markers on screen, resizing them mid-zoom costs a full restyle each time: wait for the zoom to stop
+   if(V._cs===undefined||(!V.heavy&&now-(V._ct||0)>100)){inn.style.setProperty('--s',V.s);V._cs=V.s;V._ct=now}
    clearTimeout(V._zt);V._zt=setTimeout(()=>{host.classList.add('settle');inn.style.setProperty('--s',V.s);V._cs=V.s;V._ct=performance.now();host.classList.remove('zooming');clearTimeout(V._st);V._st=setTimeout(()=>host.classList.remove('settle'),200)},110)}
   const zl=V.s>=2.2?3:V.s>=1.6?2:1;if(host.dataset.zl!=String(zl)){host.dataset.zl=zl}V.onzoom&&V.onzoom(V.s);V.onlbl&&V.onlbl();V.onhd&&V.onhd();V.miniDraw()};
  V.miniDraw=function(){const on=V.s>1.25&&V.iw>1;mini.classList.toggle('on',on);if(!on)return;const mw=Math.min(150,150*V.iw/V.ih),mh=mw*V.ih/V.iw;mini.style.width=mw+'px';mini.style.height=mh+'px';
@@ -222,7 +225,7 @@ function gpOwMarkers(){const V=GP.V,S=gpMkSrc(),M=S.M,t=S.t;GP.mkKey=S.key;GP.mk
  M.cats.forEach(c=>{if(S.g?!S.on(c):!GP.on.has(c.id))return;c.it.forEach(r=>{if(!onTab(r,t)||(!S.g&&!gpVisible(r,t)))return;const e=gpMarkerEl(r,c.kind,r.col||c.col,M);
   if(S.T){const q=S.T(r);if(q[0]<-2||q[0]>102||q[1]<-2||q[1]>102)return;e.style.left=q[0]+'%';e.style.top=q[1]+'%'}if(c.kind!=='label'){e.onclick=ev=>{ev.stopPropagation();if(!V.moved)gpShowItem(r)};e.onmouseenter=ev=>showTip(ev,`<b>${esc(r.name)}</b><br><span style="color:var(--mute)">${esc(c.n)}</span>`);e.onmouseleave=hideTip}fr.appendChild(e)})});
  if(!S.g)gpNotes('o'+t.k).forEach((n,ni)=>fr.appendChild(gpNoteEl(n,ni,'o'+t.k)));
- V.mk.appendChild(fr);gpLblInit()}
+ V.mk.appendChild(fr);V.heavy=V.mk.childElementCount>600;V.host.classList.toggle('heavy',V.heavy);gpLblInit()}
 // ---------- place-name tiers: reveal by zoom, like the in-game map ----------
 // tier 0 = regions, 2 = sub-regions, 3 = generic small labels, 4 = places, 5 = minor spots / rooms
 function gpTier(r,M){M=M||(GP.g&&gpModel(GP.g));if(M&&M._lz===undefined)M._lz=M.cats.some(c=>c.kind==='label'&&c.it.some(x=>x.mz>0));
@@ -340,10 +343,18 @@ function gpShowItem(r){const V=GP.V,c=r.c;GP.sel=r;typeof zdSel==='function'&&zd
  V.pop.querySelector('[data-do="done"]')?.addEventListener('click',e=>{e.stopPropagation();gpToggle(r.u)});
  V.pop.querySelector('[data-do="center"]').onclick=e=>{e.stopPropagation();V.focus(el?parseFloat(el.style.left):r.x,el?parseFloat(el.style.top):r.y,Math.max(V.s,2.5))}}
 function gpItem(u){if(!GP.g)return null;if(GP.mode==='o'){for(const c of gpModel(GP.g).cats)for(const r of c.it)if(r.u===u)return r;return null}return (dgItems(GP.g.id)[GP.dm]||[]).find(r=>r.u===u)||null}
+// Checklist fast path: with thousands of rows open, re-drawing the whole sidebar per tick is slow, so update in place.
+function gpListTick(u){if(GP.owView!=='list'||(GP.lf||'all')!=='all')return false;const side=document.querySelector('.gpside');const li=side&&side.querySelector(`li[data-u="${u}"]`);if(!li)return false;
+ const on=GP.done.has(u),d=on?1:-1;li.classList.toggle('done',on);li.querySelector('input').checked=on;
+ const bump=el=>{if(el)el.innerHTML=el.innerHTML.replace(/(\d+)(\/\d+)$/,(m,a,b)=>(+a+d)+b)};bump(li.closest('details')?.querySelector('summary small'));
+ const pg=side.querySelector('.gpprog');if(pg){const t=pg.previousElementSibling,m=t&&t.textContent.match(/^(\d+) of (\d+)/);if(m){const n=+m[1]+d,a=+m[2];t.textContent=`${n} of ${a} found${a?` (${Math.round(n/a*100)}%)`:''}`;pg.firstElementChild.style.width=(a?n/a*100:0)+'%'}}
+ // refresh the rest of the sidebar (region totals etc.) once the ticking stops
+ clearTimeout(GP.ltT);GP.ltT=setTimeout(()=>{if(GP.mode==='o'&&GP.owView==='list'&&!document.querySelector('.gpside .gplq:focus'))gpOwSide()},1500);
+ return true}
 function gpToggle(u,quiet){GP.done.has(u)?GP.done.delete(u):GP.done.add(u);gpSaveDone();
  if(!quiet&&GP.V){const r=gpItem(u);const on=GP.done.has(u);GP.V.toast((on?'Marked found: ':'Unmarked: ')+(r?r.name:''),()=>gpToggle(u,true))}
  const el=GP.V.mk.querySelector(`[data-u="${u}"]`);el&&el.classList.toggle('done',GP.done.has(u));
- if(GP.mode==='o'){gpOwSide();if(GP.sel&&GP.sel.u===u)gpShowItem(GP.sel)}else{gpDgSide(true);if(GP.sel&&GP.sel.u===u)gpShowCheck(GP.sel)}}
+ if(GP.mode==='o'){if(!gpListTick(u))gpOwSide();if(GP.sel&&GP.sel.u===u)gpShowItem(GP.sel)}else{gpDgSide(true);if(GP.sel&&GP.sel.u===u)gpShowCheck(GP.sel)}}
 
 // ---------- notes ----------
 function gpNoteKey(){return GP.mode==='o'?'o'+gpModel(GP.g).tabs[GP.tab].k:'d'+DUNG[GP.g.id].m[GP.dm].img}
